@@ -11,7 +11,7 @@ class Slider extends Component {
     constructor() {
         super();
         this.state = {
-            active: 1,
+            active: 0,
             slides: [
                 {
                     id: 1,
@@ -32,12 +32,13 @@ class Slider extends Component {
                 {
                     id: 5,
                     src: img5
-                }
+                },
             ],
-            startSlide: null,
+            startPosTouch: null,
+            timer: 0,
             style: {
                 left: -window.innerWidth + 'px'
-            }
+            },
         };
         this.mouseDown = this.mouseDown.bind(this);
         this.mouseMove = this.mouseMove.bind(this);
@@ -65,48 +66,64 @@ class Slider extends Component {
         ];
     }
 
+    getNewActive(direction) {
+        if (direction && this.state.active === this.state.slides.length - 1) {
+            return 0;
+        } else if (!direction && this.state.active === 0) {
+            return this.state.slides.length - 1;
+        } else {
+            return (direction) ? this.state.active + 1 : this.state.active - 1;
+        }
+    }
+
+    getSliderField(el) {
+        for (; !el.classList.contains('slider__field');) el = el.parentNode;
+        return el
+    };
+
     mouseDown(e) {
         e.preventDefault();
-        this.setState({startSlide: e.nativeEvent.clientX});
-        e.nativeEvent.target.onmousemove = this.mouseMove;
+        clearTimeout(this.state.timer);
+        let newState = {startPosTouch: e.nativeEvent.clientX};
+        if (this.state.style.transition) {
+            newState.active = this.getNewActive(parseFloat(this.state.style.left) !== 0);
+            newState.style = {left: -window.innerWidth};
+        }
+        this.setState(newState);
+        let target = this.getSliderField(e.nativeEvent.target);
+        target.onmousemove = this.mouseMove;
     }
 
     mouseMove(e) {
         e.preventDefault();
-        if (!e.which) {
-            e.target.onmousemove = null;
-            let direction = e.clientX < this.state.startSlide;
-            let left = direction ? -window.innerWidth * 2 + 'px' : '0px';
-            let transition = Math.round(window.innerWidth / 3);
+        if (e.which) {
             this.setState({
                 style: {
-                    transition: transition + 'ms',
-                    left
+                    left: -window.innerWidth + e.clientX - this.state.startPosTouch + 'px'
                 }
             });
-            setTimeout(() => {
-                let active;
-                if (direction && this.state.active === this.state.slides.length - 1) {
-                    active = 0;
-                } else if (!direction && this.state.active === 0) {
-                    active = this.state.slides.length - 1;
-                } else {
-                    active = (direction) ? this.state.active + 1 : this.state.active - 1;
-                }
-                return this.setState({
-                    active,
-                    style: {
-                        left: -window.innerWidth + 'px'
-                    }
-                })
-            }, transition);
             return;
         }
+        let target = this.getSliderField(e.target);
+        target.onmousemove = null;
+        let direction = e.clientX < this.state.startPosTouch;
+        let left = direction ? -window.innerWidth * 2 + 'px' : '0px';
+        let transition = Math.round(window.innerWidth / 3);
         this.setState({
             style: {
-                left: -window.innerWidth + e.clientX - this.state.startSlide + 'px'
-            }
+                transition: transition + 'ms',
+                left
+            },
         });
+        let timer = setTimeout(() => {
+            return this.setState({
+                active: this.getNewActive(direction),
+                style: {
+                    left: -window.innerWidth + 'px'
+                }
+            })
+        }, transition);
+        this.setState({timer});
     }
 
     render() {
