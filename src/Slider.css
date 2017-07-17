@@ -1,0 +1,29 @@
+body{
+  margin: 0;
+}
+
+.slider{
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.7);
+}
+.slider__field{
+  position: relative;
+  width: 300vw;
+  height: 100vh;
+  display: flex;
+}
+.slider__slide{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: all-scroll;
+}
+.slider__slide > img{
+  user-select: none;
+  max-width: 100vw;
+  max-height: 100vh;
+}
